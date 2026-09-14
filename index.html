@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Paycheck Calculator</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --card: #1a1d24;
+    --card-2: #21252e;
+    --border: #2c313c;
+    --text: #eef0f3;
+    --sub: #9aa3b2;
+    --accent: #4ade80;
+    --accent-dim: #1e3a2a;
+    --accent-border: #2e5a3f;
+    --warn: #f87171;
+    --gold: #fbbf24;
+    --blue: #60a5fa;
+    --highlight-bg: #142235;
+    --highlight-border: #2b4a72;
+    --net-grad-1: #16321f;
+    --net-grad-2: #0f2517;
+    --net-label: #b7e6c4;
+    --radius: 14px;
+  }
+  body[data-theme="light"] {
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --card-2: #eef0f3;
+    --border: #d7dbe2;
+    --text: #171a20;
+    --sub: #5b6472;
+    --accent: #16a34a;
+    --accent-dim: #dcfce7;
+    --accent-border: #86d3a4;
+    --warn: #dc2626;
+    --gold: #b45309;
+    --blue: #2563eb;
+    --highlight-bg: #e8f0fe;
+    --highlight-border: #a9c6f5;
+    --net-grad-1: #dcfce7;
+    --net-grad-2: #bbf7d0;
+    --net-label: #15803d;
+  }
+  body[data-theme="sepia"] {
+    --bg: #f2e8d5;
+    --card: #fbf4e6;
+    --card-2: #ede0c8;
+    --border: #d9c69f;
+    --text: #3a2f1f;
+    --sub: #7a6a4f;
+    --accent: #2f7a3d;
+    --accent-dim: #dfeed2;
+    --accent-border: #9fc48a;
+    --warn: #b3402a;
+    --gold: #a6650f;
+    --blue: #2f5f9e;
+    --highlight-bg: #eee0c2;
+    --highlight-border: #cbab6c;
+    --net-grad-1: #dfeed2;
+    --net-grad-2: #cde3b8;
+    --net-label: #2f5f24;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    padding: 16px;
+    padding-bottom: 60px;
+    max-width: 480px;
+    margin: 0 auto;
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+  .theme-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .theme-btn {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 6px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .theme-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-dim);
+  }
+  h1 { font-size: 20px; font-weight: 700; margin: 4px 0 2px; letter-spacing: -0.01em; }
+  .subtitle { color: var(--sub); font-size: 13px; margin-bottom: 18px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 14px; }
+  .card.highlight { border-color: var(--highlight-border); background: var(--highlight-bg); }
+  .card-title {
+    font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--sub); margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
+  }
+  .card-title .chevron { transition: transform 0.2s ease; font-size: 11px; color: var(--sub); }
+  .card-title.collapsed .chevron { transform: rotate(-90deg); }
+  .card-body.hidden { display: none; }
+
+  .field-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; gap: 10px; }
+  .field-row:last-child { margin-bottom: 0; }
+  .field-label { font-size: 14px; color: var(--text); flex: 1; }
+  .field-label small { display: block; color: var(--sub); font-size: 11.5px; margin-top: 1px; }
+  input[type="number"], input[type="text"], input[type="date"] {
+    background: var(--card-2); border: 1px solid var(--border); color: var(--text);
+    border-radius: 10px; padding: 9px 10px; font-size: 15px; text-align: right;
+  }
+  input[type="number"] { width: 108px; -moz-appearance: textfield; }
+  input[type="date"] { width: 152px; text-align: left; }
+  input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  input:focus { outline: none; border-color: var(--accent); }
+
+  .week-header { font-size: 13.5px; font-weight: 700; color: var(--gold); margin: 4px 0 10px; padding-top: 10px; border-top: 1px dashed var(--border); }
+  .week-header.first { border-top: none; padding-top: 0; margin-top: 0; }
+
+  .line-item { display: flex; justify-content: space-between; font-size: 14px; padding: 7px 0; border-bottom: 1px solid var(--border); }
+  .line-item:last-child { border-bottom: none; }
+  .line-item .label { color: var(--sub); }
+  .line-item .val { font-variant-numeric: tabular-nums; font-weight: 600; }
+  .line-item.neg .val { color: var(--warn); }
+
+  .divider { height: 1px; background: var(--border); margin: 10px 0; }
+
+  .gross-box { background: var(--accent-dim); border: 1px solid var(--accent-border); border-radius: var(--radius); padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .gross-box .label { font-size: 13px; color: var(--net-label); font-weight: 600; }
+  .gross-box .val { font-size: 20px; font-weight: 800; color: var(--accent); }
+
+  .net-box { background: linear-gradient(135deg, var(--net-grad-1), var(--net-grad-2)); border: 1px solid var(--accent-border); border-radius: var(--radius); padding: 18px 16px; text-align: center; margin-top: 4px; }
+  .net-box .label { font-size: 12px; color: var(--net-label); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; }
+  .net-box .val { font-size: 34px; font-weight: 800; color: var(--accent); margin-top: 4px; letter-spacing: -0.02em; }
+
+  .btn-row { display: flex; gap: 10px; margin-top: 6px; }
+  button { flex: 1; background: var(--card-2); border: 1px solid var(--border); color: var(--text); padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  button:active { background: #2a2f3a; }
+  button.danger { color: var(--warn); }
+  button.primary { background: var(--accent); color: #0f1115; border-color: var(--accent); }
+
+  .add-row-btn { width: 100%; background: transparent; border: 1px dashed var(--border); color: var(--sub); padding: 10px; font-size: 13px; margin-top: 4px; }
+
+  .extra-line { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .extra-line input[type="text"] { flex: 1; width: auto; text-align: left; }
+  .extra-line input[type="number"] { width: 90px; }
+  .extra-line input[type="date"] { width: 128px; }
+  .extra-line .rm { background: none; border: none; color: var(--warn); font-size: 18px; padding: 4px 8px; flex: none; width: auto; }
+
+  .footer-note { color: var(--sub); font-size: 11.5px; text-align: center; margin-top: 18px; line-height: 1.5; }
+  .hint { font-size: 11px; color: var(--sub); margin-top: 8px; line-height: 1.4; }
+
+  .save-banner {
+    position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--accent); color: #0f1115; font-weight: 700; font-size: 13px; padding: 9px 18px;
+    border-radius: 20px; opacity: 0; transition: all 0.25s ease; pointer-events: none; white-space: nowrap;
+  }
+  .save-banner.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .period-label { font-size: 13px; color: var(--blue); margin-top: 10px; line-height: 1.6; background: var(--card-2); border-radius: 10px; padding: 10px 12px; }
+  .period-label b { color: var(--text); }
+  .warn-text { color: var(--warn); font-size: 12px; margin-top: 6px; }
+</style>
+</head>
+<body data-theme="dark">
+
+<h1>💰 Paycheck Calculator</h1>
+<div class="subtitle">Biweekly pay estimator — 8-day shift cycle</div>
+
+<div class="theme-row">
+  <button class="theme-btn" id="themeBtn-dark" onclick="setTheme('dark')">🌙 Dark</button>
+  <button class="theme-btn" id="themeBtn-light" onclick="setTheme('light')">☀️ Light</button>
+  <button class="theme-btn" id="themeBtn-sepia" onclick="setTheme('sepia')">📜 Sepia</button>
+</div>
+
+<!-- AUTO CALC BY PAYDAY DATE -->
+<div class="card highlight">
+  <div class="card-title" onclick="toggleCard(this)">📆 Calculate by Payday Date <span class="chevron">▾</span></div>
+  <div class="card-body">
+    <div class="field-row">
+      <div class="field-label">Payday date<small>Must be a Wednesday</small></div>
+      <input type="date" id="paydayDate" value="2026-09-16">
+    </div>
+    <button class="primary" onclick="calculateFromPayday()">⚡ Auto-fill this pay period</button>
+    <div id="periodLabel" class="period-label" style="display:none;"></div>
+    <div class="hint">Works for any past or future payday — auto-fills scheduled hours, overtime split, and holiday pay based on your shift cycle and the holiday list below. Called-in hours still need to be entered manually per week.</div>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div class="card">
+  <div class="card-title" onclick="toggleCard(this)">⚙️ Rates & Deductions <span class="chevron">▾</span></div>
+  <div class="card-body">
+    <div class="field-row">
+      <div class="field-label">Base hourly rate<small>Applies to regular hours</small></div>
+      <input type="number" id="baseRate" value="18.25" step="0.01" oninput="calc()">
+    </div>
+    <div class="field-row">
+      <div class="field-label">Overtime multiplier<small>Applied after 40 hrs/week</small></div>
+      <input type="number" id="otMult" value="1.5" step="0.05" oninput="calc()">
+    </div>
+    <div class="field-row">
+      <div class="field-label">Holiday-worked multiplier<small>Rate 3: worked on observed holiday</small></div>
+      <input type="number" id="holMult" value="2" step="0.05" oninput="calc()">
+    </div>
+    <div class="field-row">
+      <div class="field-label">Called-in multiplier<small>Rate 5: called in on a day off</small></div>
+      <input type="number" id="callMult" value="2" step="0.05" oninput="calc()">
+    </div>
+    <div class="divider"></div>
+    <div class="field-row">
+      <div class="field-label">Pension %<small>Applied to full gross</small></div>
+      <input type="number" id="pensionPct" value="20" step="0.5" oninput="calc()">
+    </div>
+    <div class="field-row">
+      <div class="field-label">Family Medical<small>Flat deduction</small></div>
+      <input type="number" id="famMed" value="297" step="0.01" oninput="calc()">
+    </div>
+    <div class="field-row">
+      <div class="field-label">NIB<small>Flat deduction</small></div>
+      <input type="number" id="nib" value="97" step="0.01" oninput="calc()">
+    </div>
+    <div class="divider"></div>
+    <div class="field-row">
+      <div class="field-label">Cycle anchor date<small>A confirmed "Day 1" (start of 2 day-shifts) of your 8-day cycle</small></div>
+      <input type="date" id="anchorDate" value="2026-01-03">
+    </div>
+  </div>
+</div>
+
+<!-- HOLIDAYS -->
+<div class="card">
+  <div class="card-title" onclick="toggleCard(this)">🎉 Observed Holidays <span class="chevron">▾</span></div>
+  <div class="card-body">
+    <div id="holidayList"></div>
+    <button class="add-row-btn" onclick="addHoliday()">+ Add holiday date</button>
+    <div class="hint">Pre-loaded with the 11 confirmed 2026 Bahamas public holidays. Add more as future years are announced, or edit/remove any that don't apply to you.</div>
+  </div>
+</div>
+
+<!-- WEEK 1 -->
+<div class="card">
+  <div class="card-title" onclick="toggleCard(this)">📅 Week 1 <span class="chevron">▾</span></div>
+  <div class="card-body">
+    <div class="field-row">
+      <div class="field-label">Regular scheduled hours<small>Base + OT auto-split at 40</small></div>
+      <input type="number" id="w1_reg" value="48" step="1" oninput="calc()">
+    </div>
+    <div class="field-row">
+      <div class="field-label">Called-in hours<small>Rate 5 — double time, off-day work</small></div>
+      <input type="number" id="w1_call" value="0" step="1" oninput="calc()">
+    </div>
+    <div class="field-row">
+      <div class="field-label">Holiday worked hours<small>Rate 3 — double time portion</small></div>
+      <input type="number" id="w1_holwork" value="0" step="1" oninput="calc()">
+    </div>
+    <div class="field-row">
+      <div class="field-label"># Holidays not worked<small>Rate 2 — flat 8 hrs × base each</small></div>
+      <input type="number" id="w1_holoff" value="0" step="1" oninput="calc()">
+    </div>
+  </div>
+</div>
+
+<!-- WEEK 2 -->
+<div class="card">
+  <div class="card-title" onclick="toggleCard(this)">📅 Week 2 <span class="chevron">▾</span></div>
+  <div class="card-body">
+    <div class="field-row">
+      <div class="field-label">Regular scheduled hours<small>Base + OT auto-split at 40</small></div>
+      <input type="number" id="w2_reg" value="48" step="1" oninput="calc()">
+    </div>
+    <div class="field-row">
+      <div class="field-label">Called-in hours<small>Rate 5 — double time, off-day work</small></div>
+      <input type="number" id="w2_call" value="24" step="1" oninput="calc()">
+    </div>
+    <div class="field-row">
+      <div class="field-label">Holiday worked hours<small>Rate 3 — double time portion</small></div>
+      <input type="number" id="w2_holwork" value="0" step="1" oninput="calc()">
+    </div>
+    <div class="field-row">
+      <div class="field-label"># Holidays not worked<small>Rate 2 — flat 8 hrs × base each</small></div>
+      <input type="number" id="w2_holoff" value="0" step="1" oninput="calc()">
+    </div>
+  </div>
+</div>
+
+<!-- BONUS / ADDITIONAL -->
+<div class="card">
+  <div class="card-title" onclick="toggleCard(this)">➕ Bonus / Additional Pay <span class="chevron">▾</span></div>
+  <div class="card-body">
+    <div id="bonusList"></div>
+    <button class="add-row-btn" onclick="addExtra('bonus')">+ Add bonus / extra pay</button>
+  </div>
+</div>
+
+<!-- ADDITIONAL DEDUCTIONS -->
+<div class="card">
+  <div class="card-title" onclick="toggleCard(this)">➖ Additional Deductions <span class="chevron">▾</span></div>
+  <div class="card-body">
+    <div id="deductList"></div>
+    <button class="add-row-btn" onclick="addExtra('deduct')">+ Add deduction</button>
+  </div>
+</div>
+
+<!-- BREAKDOWN -->
+<div class="card">
+  <div class="card-title" onclick="toggleCard(this)">🧮 Breakdown <span class="chevron">▾</span></div>
+  <div class="card-body" id="breakdownBody"></div>
+</div>
+
+<div class="gross-box"><div class="label">GROSS PAY</div><div class="val" id="grossVal">$0.00</div></div>
+<div class="net-box"><div class="label">Net Payday Amount</div><div class="val" id="netVal">$0.00</div></div>
+
+<div class="btn-row">
+  <button onclick="saveState()">💾 Save</button>
+  <button class="danger" onclick="resetAll()">↺ Reset</button>
+</div>
+
+<div class="footer-note">
+  Base rate, deductions, holidays, and cycle anchor are remembered on this device.<br>
+  Built for an 8-day shift cycle (2 day shifts, 2 night shifts, 4 off) — Sun–Sat overtime weeks, biweekly pay.
+</div>
+
+<div class="save-banner" id="saveBanner">Saved ✓</div>
+
+<script>
+const STORAGE_KEY = 'paycheckCalcState_v2';
+const DAY_MS = 86400000;
+
+const DEFAULT_HOLIDAYS = [
+  { date: '2026-01-01', label: "New Year's Day" },
+  { date: '2026-01-12', label: 'Majority Rule Day (observed)' },
+  { date: '2026-04-03', label: 'Good Friday' },
+  { date: '2026-04-06', label: 'Easter Monday' },
+  { date: '2026-05-25', label: 'Whit Monday' },
+  { date: '2026-06-05', label: 'Randol Fawkes Labour Day' },
+  { date: '2026-07-10', label: 'Independence Day' },
+  { date: '2026-08-03', label: 'Emancipation Day' },
+  { date: '2026-10-12', label: "National Heroes' Day" },
+  { date: '2026-12-25', label: 'Christmas Day' },
+  { date: '2026-12-28', label: 'Boxing Day (observed)' }
+];
+
+function setTheme(theme) {
+  document.body.setAttribute('data-theme', theme);
+  ['dark', 'light', 'sepia'].forEach(t => {
+    document.getElementById('themeBtn-' + t).classList.toggle('active', t === theme);
+  });
+  try { localStorage.setItem('paycheckCalcTheme', theme); } catch (e) {}
+}
+function loadTheme() {
+  let theme = 'dark';
+  try { theme = localStorage.getItem('paycheckCalcTheme') || 'dark'; } catch (e) {}
+  setTheme(theme);
+}
+
+function toggleCard(el) {
+  el.classList.toggle('collapsed');
+  el.nextElementSibling.classList.toggle('hidden');
+}
+function fmt(n) {
+  const sign = n < 0 ? '-' : '';
+  return sign + '$' + Math.abs(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+function num(id) { const v = parseFloat(document.getElementById(id).value); return isNaN(v) ? 0 : v; }
+function mod(n, m) { return ((n % m) + m) % m; }
+
+function parseUTC(dateStr) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return Date.UTC(y, m - 1, d);
+}
+function toDateStr(ms) {
+  const d = new Date(ms);
+  return d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0') + '-' + String(d.getUTCDate()).padStart(2, '0');
+}
+function fmtPretty(ms) {
+  const d = new Date(ms);
+  return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+}
+
+// cycle index 0-7 => Day1..Day8 for a given date (ms, UTC midnight)
+function cycleIndex(ms) {
+  const anchorMs = parseUTC(document.getElementById('anchorDate').value);
+  const diffDays = Math.round((ms - anchorMs) / DAY_MS);
+  return mod(diffDays, 8);
+}
+
+// hours attributable to calendar date `ms` (shift-start hours + spillover from previous day's night shift)
+function hoursOnDate(ms) {
+  const idx = cycleIndex(ms);
+  const idxPrev = cycleIndex(ms - DAY_MS);
+  let hrs = 0;
+  if (idx === 0 || idx === 1) hrs += 12;         // day shift, entirely same date
+  else if (idx === 2 || idx === 3) hrs += 4;      // night shift start portion (8pm-midnight)
+  if (idxPrev === 2 || idxPrev === 3) hrs += 8;   // spillover from previous day's night shift (midnight-8am)
+  return hrs;
+}
+
+function getHolidaySet() {
+  const set = {};
+  document.querySelectorAll('#holidayList .extra-line').forEach(row => {
+    const inputs = row.querySelectorAll('input');
+    const dateVal = inputs[0].value;
+    if (dateVal) set[dateVal] = inputs[1].value || 'Holiday';
+  });
+  return set;
+}
+
+function calculateFromPayday() {
+  const paydayStr = document.getElementById('paydayDate').value;
+  if (!paydayStr) { alert('Please select a payday date.'); return; }
+  const paydayMs = parseUTC(paydayStr);
+  const weekday = new Date(paydayMs).getUTCDay(); // 0=Sun...3=Wed...6=Sat
+
+  const periodEndMs = paydayMs - 4 * DAY_MS;       // Saturday
+  const periodStartMs = periodEndMs - 13 * DAY_MS; // Sunday
+  const week1StartMs = periodStartMs;
+  const week2StartMs = periodStartMs + 7 * DAY_MS;
+
+  const holidays = getHolidaySet();
+
+  function computeWeek(weekStartMs) {
+    let regularRaw = 0, holWorkHrs = 0, holOffCount = 0;
+    for (let i = 0; i < 7; i++) {
+      const dMs = weekStartMs + i * DAY_MS;
+      const dStr = toDateStr(dMs);
+      const hrs = hoursOnDate(dMs);
+      if (holidays.hasOwnProperty(dStr)) {
+        if (hrs === 0) {
+          holOffCount += 1;
+        } else {
+          holWorkHrs += hrs;
+          regularRaw += 0; // excluded from regular pool
+          continue;
+        }
+      }
+      if (!holidays.hasOwnProperty(dStr) || hrs === 0) {
+        regularRaw += hrs;
+      }
+    }
+    return { regularRaw, holWorkHrs, holOffCount };
+  }
+
+  const w1 = computeWeek(week1StartMs);
+  const w2 = computeWeek(week2StartMs);
+
+  document.getElementById('w1_reg').value = w1.regularRaw;
+  document.getElementById('w1_holwork').value = w1.holWorkHrs;
+  document.getElementById('w1_holoff').value = w1.holOffCount;
+  document.getElementById('w1_call').value = 0;
+
+  document.getElementById('w2_reg').value = w2.regularRaw;
+  document.getElementById('w2_holwork').value = w2.holWorkHrs;
+  document.getElementById('w2_holoff').value = w2.holOffCount;
+  document.getElementById('w2_call').value = 0;
+
+  const label = document.getElementById('periodLabel');
+  label.style.display = 'block';
+  let html = `Pay period: <b>${fmtPretty(periodStartMs)}</b> – <b>${fmtPretty(periodEndMs)}</b><br>`;
+  html += `Week 1: ${fmtPretty(week1StartMs)} – ${fmtPretty(week1StartMs + 6*DAY_MS)}<br>`;
+  html += `Week 2: ${fmtPretty(week2StartMs)} – ${fmtPretty(week2StartMs + 6*DAY_MS)}<br>`;
+  html += `Payday: <b>${fmtPretty(paydayMs)}</b>`;
+  if (weekday !== 3) {
+    html += `<div class="warn-text">⚠ Selected date is not a Wednesday — double-check this is your actual payday.</div>`;
+  }
+  html += `<div class="hint" style="margin-top:8px;">If you were called in on a scheduled day off during this period, add those hours manually below (Called-in hours).</div>`;
+  label.innerHTML = html;
+
+  calc();
+}
+
+function addExtra(type, label = '', amount = '') {
+  const container = document.getElementById(type === 'bonus' ? 'bonusList' : 'deductList');
+  const row = document.createElement('div');
+  row.className = 'extra-line';
+  row.innerHTML = `
+    <input type="text" placeholder="${type === 'bonus' ? 'e.g. Performance bonus' : 'e.g. Uniform fee'}" value="${label}" oninput="calc()">
+    <input type="number" placeholder="0.00" step="0.01" value="${amount}" oninput="calc()">
+    <button class="rm" onclick="this.parentElement.remove(); calc();">×</button>
+  `;
+  container.appendChild(row);
+  calc();
+}
+
+function addHoliday(dateVal = '', label = '') {
+  const container = document.getElementById('holidayList');
+  const row = document.createElement('div');
+  row.className = 'extra-line';
+  row.innerHTML = `
+    <input type="date" value="${dateVal}">
+    <input type="text" placeholder="Holiday name" value="${label}" style="width:120px;">
+    <button class="rm" onclick="this.parentElement.remove();">×</button>
+  `;
+  container.appendChild(row);
+}
+
+function extrasTotal(type) {
+  const container = document.getElementById(type === 'bonus' ? 'bonusList' : 'deductList');
+  let total = 0; const items = [];
+  container.querySelectorAll('.extra-line').forEach(row => {
+    const inputs = row.querySelectorAll('input');
+    const label = inputs[0].value || (type === 'bonus' ? 'Bonus' : 'Deduction');
+    const amt = parseFloat(inputs[1].value) || 0;
+    total += amt;
+    if (amt !== 0) items.push({ label, amt });
+  });
+  return { total, items };
+}
+
+function calcWeek(prefix) {
+  const reg = num(prefix + '_reg');
+  const call = num(prefix + '_call');
+  const holWork = num(prefix + '_holwork');
+  const holOffCount = num(prefix + '_holoff');
+  const base = num('baseRate'), otMult = num('otMult'), holMult = num('holMult'), callMult = num('callMult');
+  const regHrs = Math.min(reg, 40), otHrs = Math.max(reg - 40, 0);
+  const regPay = regHrs * base, otPay = otHrs * base * otMult;
+  const callPay = call * base * callMult;
+  const holWorkPay = holWork * base * holMult;
+  const holOffPay = holOffCount * 8 * base;
+  const total = regPay + otPay + callPay + holWorkPay + holOffPay;
+  return { regHrs, otHrs, regPay, otPay, callPay, holWorkPay, holOffPay, total };
+}
+
+function lineItem(label, amount, cls = '') {
+  return `<div class="line-item ${cls}"><span class="label">${label}</span><span class="val">${fmt(amount)}</span></div>`;
+}
+
+function calc() {
+  const w1 = calcWeek('w1'), w2 = calcWeek('w2');
+  const bonus = extrasTotal('bonus'), deduct = extrasTotal('deduct');
+  const gross = w1.total + w2.total + bonus.total;
+  const pensionPct = num('pensionPct');
+  const pension = gross * (pensionPct / 100);
+  const famMed = num('famMed'), nib = num('nib');
+  const net = gross - pension - famMed - nib - deduct.total;
+
+  document.getElementById('grossVal').textContent = fmt(gross);
+  document.getElementById('netVal').textContent = fmt(net);
+
+  let html = `<div class="week-header first">Week 1</div>`;
+  html += lineItem('Regular (' + w1.regHrs + ' hrs @ base)', w1.regPay);
+  if (w1.otHrs > 0) html += lineItem('Overtime (' + w1.otHrs + ' hrs)', w1.otPay);
+  if (w1.callPay > 0) html += lineItem('Called-in (double time)', w1.callPay);
+  if (w1.holWorkPay > 0) html += lineItem('Holiday worked (double time)', w1.holWorkPay);
+  if (w1.holOffPay > 0) html += lineItem('Holiday pay (not worked)', w1.holOffPay);
+
+  html += `<div class="week-header">Week 2</div>`;
+  html += lineItem('Regular (' + w2.regHrs + ' hrs @ base)', w2.regPay);
+  if (w2.otHrs > 0) html += lineItem('Overtime (' + w2.otHrs + ' hrs)', w2.otPay);
+  if (w2.callPay > 0) html += lineItem('Called-in (double time)', w2.callPay);
+  if (w2.holWorkPay > 0) html += lineItem('Holiday worked (double time)', w2.holWorkPay);
+  if (w2.holOffPay > 0) html += lineItem('Holiday pay (not worked)', w2.holOffPay);
+
+  if (bonus.items.length) {
+    html += `<div class="week-header">Bonus / Additional</div>`;
+    bonus.items.forEach(it => html += lineItem(it.label, it.amt));
+  }
+
+  html += `<div class="week-header">Deductions</div>`;
+  html += lineItem('Pension (' + pensionPct + '%)', -pension, 'neg');
+  html += lineItem('Family Medical', -famMed, 'neg');
+  html += lineItem('NIB', -nib, 'neg');
+  deduct.items.forEach(it => html += lineItem(it.label, -it.amt, 'neg'));
+
+  document.getElementById('breakdownBody').innerHTML = html;
+}
+
+function saveState() {
+  const state = {};
+  document.querySelectorAll('input[type="number"], input[type="text"], input[type="date"]').forEach(inp => {
+    if (inp.id) state[inp.id] = inp.value;
+  });
+  state.bonusItems = [];
+  document.querySelectorAll('#bonusList .extra-line').forEach(row => {
+    const inputs = row.querySelectorAll('input');
+    state.bonusItems.push({ label: inputs[0].value, amt: inputs[1].value });
+  });
+  state.deductItems = [];
+  document.querySelectorAll('#deductList .extra-line').forEach(row => {
+    const inputs = row.querySelectorAll('input');
+    state.deductItems.push({ label: inputs[0].value, amt: inputs[1].value });
+  });
+  state.holidayItems = [];
+  document.querySelectorAll('#holidayList .extra-line').forEach(row => {
+    const inputs = row.querySelectorAll('input');
+    state.holidayItems.push({ date: inputs[0].value, label: inputs[1].value });
+  });
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    const banner = document.getElementById('saveBanner');
+    banner.classList.add('show');
+    setTimeout(() => banner.classList.remove('show'), 1400);
+  } catch (e) { alert('Could not save on this device.'); }
+}
+
+function loadState() {
+  let loadedHolidays = false;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const state = JSON.parse(raw);
+      Object.keys(state).forEach(key => {
+        if (key === 'bonusItems' || key === 'deductItems' || key === 'holidayItems') return;
+        const el = document.getElementById(key);
+        if (el) el.value = state[key];
+      });
+      (state.bonusItems || []).forEach(it => addExtra('bonus', it.label, it.amt));
+      (state.deductItems || []).forEach(it => addExtra('deduct', it.label, it.amt));
+      if (state.holidayItems && state.holidayItems.length) {
+        state.holidayItems.forEach(it => addHoliday(it.date, it.label));
+        loadedHolidays = true;
+      }
+    }
+  } catch (e) { /* ignore */ }
+  if (!loadedHolidays) {
+    DEFAULT_HOLIDAYS.forEach(h => addHoliday(h.date, h.label));
+  }
+}
+
+function resetAll() {
+  if (!confirm('Reset all fields to default? This clears saved data on this device.')) return;
+  try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+  document.getElementById('bonusList').innerHTML = '';
+  document.getElementById('deductList').innerHTML = '';
+  document.getElementById('holidayList').innerHTML = '';
+  DEFAULT_HOLIDAYS.forEach(h => addHoliday(h.date, h.label));
+  const defaults = {
+    baseRate: 18.25, otMult: 1.5, holMult: 2, callMult: 2,
+    pensionPct: 20, famMed: 297, nib: 97, anchorDate: '2026-01-03',
+    paydayDate: '2026-09-16',
+    w1_reg: 48, w1_call: 0, w1_holwork: 0, w1_holoff: 0,
+    w2_reg: 48, w2_call: 24, w2_holwork: 0, w2_holoff: 0
+  };
+  Object.keys(defaults).forEach(k => document.getElementById(k).value = defaults[k]);
+  document.getElementById('periodLabel').style.display = 'none';
+  calc();
+}
+
+loadTheme();
+loadState();
+calc();
+</script>
+
+</body>
+</html>
